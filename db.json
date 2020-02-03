@@ -1,0 +1,43 @@
+{
+  "users": [
+    {
+      "id": 0,
+      "name": "Store"
+    },
+    {
+      "id": 1,
+      "name": "Producer1"
+    },
+    {
+      "id": 2,
+      "name": "Producer2"
+    },
+    {
+      "id": 3,
+      "name": "FinalTaker"
+    }
+  ],
+  "resources": [
+    {
+      "userId": 0,
+      "qty": 999999,
+      "deliveryTime": 20,
+      "toSell": 1000240,
+      "toBuy": 0
+    },
+    {
+      "userId": 1,
+      "qty": 0,
+      "deliveryTime": 30,
+      "toSell": 997,
+      "toBuy": 0
+    },
+    {
+      "userId": 2,
+      "qty": 0,
+      "deliveryTime": 40,
+      "toSell": 0,
+      "toBuy": 0
+    }
+  ]
+}

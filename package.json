@@ -4,22 +4,63 @@
   "description": "This application is a backend server for simulating the flow of product starting from producer to consumer.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:server": "babel-node ./index.js"
   },
   "author": "Arkadiusz Osoba",
   "license": "ISC",
   "dependencies": {
+    "@babel/node": "7.8.4",
     "@babel/polyfill": "^7.7.0",
+    "apollo-boost": "0.4.7",
+    "apollo-server-express": "2.9.16",
+    "body-parser": "1.19.0",
+    "cors": "2.8.5",
+    "eslint-plugin-graphql": "3.1.1",
     "express": "^4.17.1",
-    "express-graphql": "^0.9.0",
     "graphql": "^14.5.8",
+    "graphql-subscriptions": "1.1.0",
+    "graphql-tools": "4.0.6",
+    "lowdb": "1.0.0",
     "subscriptions-transport-ws": "^0.9.16"
   },
   "devDependencies": {
     "@babel/cli": "^7.7.4",
     "@babel/core": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
+    "eslint-config-airbnb": "18.0.1",
+    "eslint-config-airbnb-base": "14.0.0",
     "webpack": "^4.41.2"
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "extends": [
+      "eslint:recommended",
+      "airbnb-base"
+    ],
+    "plugins": [
+      "prettier",
+      "graphql"
+    ],
+    "rules": {
+      "graphql/template-strings": [
+        "error",
+        {
+          "env": "literal",
+          "schemaJson": "./schema.js"
+        }
+      ],
+      "prettier/prettier": "error",
+      "no-console": [
+        "error",
+        {
+          "allow": [
+            "warn",
+            "error"
+          ]
+        }
+      ]
+    }
   },
   "babel": {
     "presets": [
