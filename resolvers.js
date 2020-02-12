@@ -5,6 +5,7 @@ export const pubsub = new PubSub();
 const AVAILIBLE_RESOURCES_SUBSCRIPTION = "AVAILIBLE_RESOURCES_SUBSCRIPTION";
 const BOUGHT_RESOURCES_SUBSCRIPTION = "BOUGHT_RESOURCES_SUBSCRIPTION";
 const SOLD_RESOURCES_SUBSCRIPTION = "SOLD_RESOURCES_SUBSCRIPTION";
+const USERS_CHANGED = "USERS_CHANGED";
 
 export const resolvers = {
   Subscription: {
@@ -16,6 +17,9 @@ export const resolvers = {
     },
     soldResource: {
       subscribe: () => pubsub.asyncIterator([SOLD_RESOURCES_SUBSCRIPTION])
+    },
+    usersChanged: {
+      subscribe: () => pubsub.asyncIterator([USERS_CHANGED])
     }
   },
   Mutation: {
@@ -163,11 +167,45 @@ export const resolvers = {
         message: "Bought resources",
         resource: { ...newRes, qty, userId }
       };
+    },
+    setUserTaken: (parent, { userId }, { db }) => {
+      const users = db.get("users").value();
+      const user = db
+        .get("users")
+        .find({ id: userId })
+        .value();
+
+      if (!user.taken) {
+        db.get("users")
+          .find({ id: userId })
+          .assign({ taken: true })
+          .write();
+
+        pubsub.publish(USERS_CHANGED, {
+          usersChanged: db
+            .get("users")
+            .filter(usr => usr.id !== 0)
+            .filter(usr => usr.id !== users.length - 1)
+            .value()
+        });
+
+        return true;
+      }
+      return false;
     }
   },
   Query: {
     resources: (parent, arg, { db }) => {
       return db.get("resources").value();
+    },
+    users: (parent, arg, { db }) => {
+      const users = db.get("users").value();
+
+      return db
+        .get("users")
+        .filter(usr => usr.id !== 0)
+        .filter(usr => usr.id !== users.length - 1)
+        .value();
     }
   }
 };

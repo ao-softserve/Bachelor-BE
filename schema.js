@@ -25,6 +25,7 @@ export const typeDefs = gql`
   type User {
     id: ID!
     name: String
+    taken: Boolean
   }
 
   type UserResources {
@@ -51,10 +52,12 @@ export const typeDefs = gql`
     availibleResourcesChanged: [Resource]
     soldResource: [SoldResource]
     boughtResource: [BoughtResource]
+    usersChanged: [User]
   }
 
   type Query {
     resources: [Resource]
+    users: [User]
   }
 
   type Mutation {
@@ -62,5 +65,6 @@ export const typeDefs = gql`
     buyResource(userId: Int!, qty: Int!): BuyResponse
     orderResource(userId: Int, qty: Int): [Resource]
     sellResources(userId: Int, qty: Int): [Resource]
+    setUserTaken(userId: Int): Boolean
   }
 `;

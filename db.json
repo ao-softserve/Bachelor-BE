@@ -6,11 +6,13 @@
     },
     {
       "id": 1,
-      "name": "Producer1"
+      "name": "Producer1",
+      "taken": true
     },
     {
       "id": 2,
-      "name": "Producer2"
+      "name": "Producer2",
+      "taken": false
     },
     {
       "id": 3,
@@ -20,16 +22,16 @@
   "resources": [
     {
       "userId": 0,
-      "qty": 999999,
+      "qty": 1000000,
       "deliveryTime": 20,
-      "toSell": 1000240,
+      "toSell": 1000000,
       "toBuy": 0
     },
     {
       "userId": 1,
       "qty": 0,
       "deliveryTime": 30,
-      "toSell": 997,
+      "toSell": 0,
       "toBuy": 0
     },
     {

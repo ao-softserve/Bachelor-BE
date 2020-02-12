@@ -8,6 +8,7 @@ import { typeDefs } from "./schema";
 import { resolvers } from "./resolvers";
 import low from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
+import { unlinkSync } from "fs";
 
 const hasPortArg = process.argv.some(arg => arg === "--p");
 const hasIpArg = process.argv.some(arg => arg === "--ip");
@@ -19,13 +20,15 @@ const ipAddr = hasIpArg
   : "localhost";
 
 // DB
+const pathToDb = "./db.json";
+unlinkSync(pathToDb);
 
 const adapter = new FileSync("./db.json");
 const db = low(adapter);
 const USERS = [
   { id: 0, name: "Store" },
-  { id: 1, name: "Producer1" },
-  { id: 2, name: "Producer2" },
+  { id: 1, name: "Producer1", taken: false },
+  { id: 2, name: "Producer2", taken: false },
   { id: 3, name: "FinalTaker" }
 ];
 
