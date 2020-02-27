@@ -1,14 +1,14 @@
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { createServer } from "http";
-import { execute, subscribe } from "graphql";
-import { SubscriptionServer } from "subscriptions-transport-ws";
-import { makeExecutableSchema } from "graphql-tools";
 import { typeDefs } from "./schema";
 import { resolvers } from "./resolvers";
 import low from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import { unlinkSync } from "fs";
+import DBController from "./DBController";
+import DBPathFactory from "./DBPathFactory";
+import { createInterface } from "readline";
 
 const hasPortArg = process.argv.some(arg => arg === "--p");
 const hasIpArg = process.argv.some(arg => arg === "--ip");
@@ -19,45 +19,19 @@ const ipAddr = hasIpArg
   ? process.argv[process.argv.findIndex(arg => arg === "--ip") + 1]
   : "localhost";
 
-// DB
-const pathToDb = "./db.json";
-unlinkSync(pathToDb);
-
-const adapter = new FileSync("./db.json");
-const db = low(adapter);
-const USERS = [
-  { id: 0, name: "Store" },
-  { id: 1, name: "Producer1", taken: false },
-  { id: 2, name: "Producer2", taken: false },
-  { id: 3, name: "FinalTaker" }
-];
-
-let RESOURCES = [
-  {
-    userId: 0,
-    qty: 1000000,
-    deliveryTime: 20,
-    toSell: 1000000,
-    toBuy: 0
-  },
-  { userId: 1, qty: 0, deliveryTime: 30, toSell: 0, toBuy: 0 },
-  {
-    userId: 2,
-    qty: 0,
-    deliveryTime: 40,
-    toSell: 0,
-    toBuy: 0
-  }
-];
-
-db.defaults({ users: USERS, resources: RESOURCES }).write();
+//@TODO: Remove unused npm modules
+//@TODO: Move apollo init to separate file
+const pathFactory = new DBPathFactory(__dirname);
+const dbController = new DBController(pathFactory.dbFilePath);
 
 const app = express();
+
+//@TODO: Intoduce headers to requests
 
 const APOLLO_SERVER = new ApolloServer({
   typeDefs,
   resolvers,
-  context: { db },
+  context: { db: dbController },
   playground: {
     endpoint: `http://${ipAddr}:${PORT}/graphql`,
     settings: {
@@ -81,3 +55,28 @@ server.listen(PORT, () => {
     `🚀 Subscriptions ready at ws://${ipAddr}:${PORT}${APOLLO_SERVER.subscriptionsPath}`
   );
 });
+
+function onExit() {
+  console.log("Shutting down the server...");
+  server.close();
+  console.log("Server is closed.");
+
+  console.log("Deleting DB ...");
+  dbController.deleteDB();
+  console.log("DB deleted.");
+
+  process.exit();
+}
+
+if (process.platform === "win32") {
+  var rl = createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  rl.on("SIGINT", function() {
+    process.emit("SIGINT");
+  });
+}
+
+process.on("SIGINT", onExit);

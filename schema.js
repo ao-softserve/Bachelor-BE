@@ -1,5 +1,7 @@
 import { gql } from "apollo-server-express";
 
+//@TODO: Dplit types to separate files
+
 export const typeDefs = gql`
   type Resource {
     type: String
@@ -26,6 +28,7 @@ export const typeDefs = gql`
     id: ID!
     name: String
     taken: Boolean
+    ready: Boolean
   }
 
   type UserResources {
@@ -48,6 +51,10 @@ export const typeDefs = gql`
     type: String
   }
 
+  type Simulation {
+    duration: Int
+  }
+
   type Subscription {
     availibleResourcesChanged: [Resource]
     soldResource: [SoldResource]
@@ -58,6 +65,7 @@ export const typeDefs = gql`
   type Query {
     resources: [Resource]
     users: [User]
+    simulation: Simulation
   }
 
   type Mutation {
@@ -66,5 +74,6 @@ export const typeDefs = gql`
     orderResource(userId: Int, qty: Int): [Resource]
     sellResources(userId: Int, qty: Int): [Resource]
     setUserTaken(userId: Int): Boolean
+    setUserReady(userId: Int): Boolean
   }
 `;

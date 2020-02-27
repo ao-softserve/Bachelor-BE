@@ -2,11 +2,17 @@ import { PubSub, withFilter } from "apollo-server-express";
 
 export const pubsub = new PubSub();
 
+//@TODO: Move const to separate file
+
 const AVAILIBLE_RESOURCES_SUBSCRIPTION = "AVAILIBLE_RESOURCES_SUBSCRIPTION";
 const BOUGHT_RESOURCES_SUBSCRIPTION = "BOUGHT_RESOURCES_SUBSCRIPTION";
 const SOLD_RESOURCES_SUBSCRIPTION = "SOLD_RESOURCES_SUBSCRIPTION";
 const USERS_CHANGED = "USERS_CHANGED";
 
+//@TODO: split resolvers inti separate files
+//@TODO: Intoduce DB models
+//@TODO: Add types
+//@TODO: Remove unused resolvers - check with FE
 export const resolvers = {
   Subscription: {
     availibleResourcesChanged: {
@@ -85,10 +91,9 @@ export const resolvers = {
       }
     },
     sellResources: (parent, { userId, qty }, { db }) => {
-      const resources = db.get("resources");
-      const resource = resources.find({ userId: userId });
+      const resource = db.getResourceByUser(userId);
       const resourceToSell = resource.value().toSell;
-      const nextResource = resources.find({ userId: userId + 1 });
+      const nextResource = db.getResourceByUser(userId + 1);
       const nextResToBuy = nextResource.value().toBuy;
       const deliveryTime = resource.value().deliveryTime;
 
@@ -115,7 +120,7 @@ export const resolvers = {
           availibleResourcesChanged: db.get("resources").value()
         });
 
-        return db.get("resources").value();
+        return db.resources.value();
       } else {
         const sold = resource
           .assign({ toSell: resourceToSell - resourceToSell })
@@ -133,13 +138,13 @@ export const resolvers = {
           });
         }
         pubsub.publish(AVAILIBLE_RESOURCES_SUBSCRIPTION, {
-          availibleResourcesChanged: db.get("resources").value()
+          availibleResourcesChanged: db.resources.value()
         });
-        return db.get("resources").value();
+        return db.resources.value();
       }
     },
     addResourcesToBuy: (parent, { userId, qty }, { db }) => {
-      const resources = db.get("resources");
+      const resources = db.resources;
       resources.find({ userId }).assign({ qty });
 
       pubsub.publish(AVAILIBLE_RESOURCES_SUBSCRIPTION, {
@@ -152,13 +157,15 @@ export const resolvers = {
       };
     },
     buyResource: (parent, { userId, qty }, { db }) => {
-      const database = db;
-      const resources = database.get("resources");
-      const resourceToChange = resources.find({ userId: userId - 1 });
+      const resourceToChange = db.resources.getResourceByUser(userId - 1);
       const newResourceQty = resourceToChange.value().qty - qty;
-      const newRes = resourceToChange.assign({ qty: newResourceQty }).write();
+      const newRes = db.setResourceFieldByUser(
+        userId - 1,
+        "qty",
+        newResourceQty
+      );
       pubsub.publish(AVAILIBLE_RESOURCES_SUBSCRIPTION, {
-        availibleResourcesChanged: resources
+        availibleResourcesChanged: db.resources
           .value()
           .map(res => (res.userId === userId ? newRes : res))
       });
@@ -169,43 +176,38 @@ export const resolvers = {
       };
     },
     setUserTaken: (parent, { userId }, { db }) => {
-      const users = db.get("users").value();
-      const user = db
-        .get("users")
-        .find({ id: userId })
-        .value();
+      const users = db.users.value();
+      const user = db.getUser(userId).value();
 
       if (!user.taken) {
-        db.get("users")
-          .find({ id: userId })
-          .assign({ taken: true })
-          .write();
+        db.setUserField(userId, "taken", true);
 
         pubsub.publish(USERS_CHANGED, {
-          usersChanged: db
-            .get("users")
-            .filter(usr => usr.id !== 0)
-            .filter(usr => usr.id !== users.length - 1)
-            .value()
+          usersChanged: db.players.value()
         });
 
         return true;
       }
       return false;
+    },
+    setUserReady: (parent, { userId }, { db }) => {
+      const users = db.users.value();
+      db.setUserField(userId, "ready", true);
+      pubsub.publish(USERS_CHANGED, {
+        usersChanged: db.players.value()
+      });
+      return true;
     }
   },
   Query: {
     resources: (parent, arg, { db }) => {
-      return db.get("resources").value();
+      return db.resources.value();
     },
     users: (parent, arg, { db }) => {
-      const users = db.get("users").value();
-
-      return db
-        .get("users")
-        .filter(usr => usr.id !== 0)
-        .filter(usr => usr.id !== users.length - 1)
-        .value();
+      return db.players.value();
+    },
+    simulation: (parent, arg, { db }) => {
+      return db.simulation.value();
     }
   }
 };
